@@ -44,7 +44,7 @@ void LCD_home(){
     LCD_nibble_write(0, 0);      /* lower nibble */
 }
 
-void LCD_data(unsigned char data) {
+void LCD_write(unsigned char data) {
     LCD_nibble_write(data & 0xF0, LCD_RS);    /* upper nibble first */
     LCD_nibble_write(data << 4, LCD_RS);      /* then lower nibble  */
 

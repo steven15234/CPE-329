@@ -1,30 +1,77 @@
-/* www.MicroDigitalEd.com
- * p3_3.c: Initialize and display "hello" on the LCD using 4-bit data mode.
- * Data and control pins share Port 4.
- * This program does not poll the status of the LCD.
- * It uses delay to wait out the time LCD controller is busy.
- * Timing is more relax than the HD44780 datasheet to accommodate the
- * variations among the LCD modules.
- * You may want to adjust the amount of delay for your LCD controller.
+//
+//#include "msp.h"
+//#include "LCD.h"
+//
+//int main(void) {
+//    LCD_init();
+//    set_DC0(FREQ_24_MHz);
+//    for(;;) {
+//        LCD_clear();     /* clear display */
+//        delay_ms(1000);
+//        LCD_write('h');      /* write the word "Hello" */
+//        LCD_write('e');
+//        LCD_write('l');
+//        LCD_write('l');
+//        LCD_write('o');
+//        LCD_home();
+//        delay_ms(5000);
+//    }
+//}
+//
+
+
+/* p3_5.c: Matrix keypad scanning
  *
- * Tested with Keil 5.20 and MSP432 Device Family Pack V2.2.0
- * on XMS432P401R Rev C.
+ * This program scans a 4x3 matrix keypad and returns a unique number
+ * for each key pressed.
+ *
+ * Port 5.7-5 are connected to the columns and Port 5.4 and 5.2-0 are connected
+ * to the rows of the keypad.
+ *
  */
+
 #include "msp.h"
 #include "LCD.h"
+#include "keypad.h"
+
+void LED_init(void);
+void LED_set(int value);
 
 int main(void) {
-    LCD_init();
-    set_DC0(FREQ_24_MHz);
-    for(;;) {
-        LCD_clear();     /* clear display */
-        delay_ms(1000);
-        LCD_data('h');      /* write the word "Hello" */
-        LCD_data('e');
-        LCD_data('l');
-        LCD_data('l');
-        LCD_data('o');
-        LCD_home();
-        delay_ms(5000);
+    unsigned int key;
+
+    keypad_init();
+    LED_init();
+
+    while(1) {
+        key = keypad_getkey();  /* read the keypad */
+        LED_set(key);           /* set LEDs according to the key code */
     }
 }
+
+
+/* Initialize tri-color LEDs on the LaunchPad board.
+ * P2.0 - red
+ * P2.1 - green
+ * P2.2 - blue
+ */
+void LED_init(void) {
+    P2->DIR |= 0x07;         /* make LED pins output */
+    P2->OUT &= ~0x07;       /* turn the LEDs off */
+}
+
+/* turn on or off the LEDs according to bit 2-0 of the value */
+void LED_set(int value) {
+    value &= 0x07;          /* only bit 2-0 are affected */
+    P2->OUT = (P2->OUT & ~0x07) | value;
+}
+
+
+
+
+
+
+
+
+
+
