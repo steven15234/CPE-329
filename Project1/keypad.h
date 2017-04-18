@@ -10,6 +10,8 @@
 
 #include "delay.h"
 
+#define KEYCODE "1234"
+
 /* this function initializes Port 5 and Port 2 that is connected to the keypad.
  * All pins are configured as GPIO input pin. The column pins have
  * the pull-up resistors enabled.
@@ -49,7 +51,7 @@ char keypad_getkey(void) {
     /* check to see any key pressed */
     P2->DIR |= 0xF0;            /* make all row pins output */
     P2->OUT &= ~0xF0;            /* drive all row pins low */
-    delay_us(10);               /* wait for signals to settle */
+    delay_us(40);               /* wait for signals to settle */
     col = P5->IN & 0x07;        /* read all column pins */
     P2->OUT |= 0xF0;            /* drive all rows high before disable them */
     P2->DIR &= ~0xF0;           /* disable all row pins drive */
@@ -63,7 +65,7 @@ char keypad_getkey(void) {
         P2->DIR &= ~0xF0;                /* disable all rows */
         P2->DIR |= row_select[row];     /* enable one row at a time */
         P2->OUT &= ~row_select[row];    /* drive the active row low */
-        delay_us(10);                   /* wait for signal to settle */
+        delay_us(40);                   /* wait for signal to settle */
         col = P5->IN & 0x07;            /* read all columns */
         P2->OUT |= row_select[row];     /* drive the active row high */
         if (col != 0x07) break;         /* if one of the input is low, some key is pressed. */
