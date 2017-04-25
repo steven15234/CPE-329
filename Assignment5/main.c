@@ -6,15 +6,19 @@
 
 #include "msp.h"
 #include "delay.h"
+#include "timers.h"
 
 void Drive_DAC(unsigned int level);
 
 volatile unsigned int TempDAC_Value = 0;
+volatile unsigned int delay = 0;
 
-int main(void)
-{
+#define TRI_SEGS 64
+
+int main(void) {
 
   WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;   // Stop watchdog timer
+
 
   set_DC0(FREQ_24_MHz);
 
@@ -40,19 +44,77 @@ int main(void)
 
   EUSCI_B0->IFG |= EUSCI_B_IFG_TXIFG;  // Clear TXIFG flag
 
-  while (1) {
-      Drive_DAC(TempDAC_Value);
-      TempDAC_Value += 100;            // increment by 100 mv
-  }
+ //Setup timer and interrupts
+ delay =  0xDB23; //5ms base
+
+ TIMER_A0->CCTL[0] = TIMER_A_CCTLN_CCIE; // TACCR0 interrupt enabled
+ TIMER_A0->CCR[0] = delay;
+
+ TIMER_A0->CTL = TIMER_A_CTL_SSEL__SMCLK | // SMCLK, continuous mode
+         TIMER_A_CTL_MC__CONTINUOUS;
+
+ SCB->SCR |= SCB_SCR_SLEEPONEXIT_Msk;    // Enable sleep on exit from ISR
+
+     // Enable global interrupt
+ __enable_irq();
+ NVIC->ISER[0] = 1 << ((TA0_0_IRQn) & 31);
+
+ while (1){
+     __sleep();
+     __no_operation();                   // For debugger
+ }
 
 } // end of main
 
 
+
+
+/* Square Timer A0 interrupt service routine
+void TA0_0_IRQHandler(void) {
+ static uint8_t DAC_STATE = 0;
+ static uint8_t Delay_Loop = 0;
+
+ TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;
+  if(Delay_Loop < 4){
+      TIMER_A0->CCR[0] += delay;
+      Delay_Loop++;
+  }
+  else if(0 == DAC_STATE){
+      DAC_STATE = 1;
+      TempDAC_Value = 2048; //Set output to 2V
+      Delay_Loop = 0;
+  }
+  else if(1 == DAC_STATE){
+      DAC_STATE = 0;
+      TempDAC_Value = 0; //Set output to 0V
+      Delay_Loop = 0;
+  }
+  Drive_DAC(TempDAC_Value);
+  TIMER_A0->CCR[0] += delay;
+
+}
+*/
+// Triangle Timer A0 interrupt service routine
+void TA0_0_IRQHandler(void) {
+ static int8_t DAC_STATE = 0;
+ static uint8_t Delay_Loop = 0;
+
+ TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;
+
+  if(TempDac > 2048)
+      shift = -32;
+  else if (TempDAC_Value )
+      shift = 32;
+  TempDAC_Value += shift;
+  Drive_DAC(TempDAC_Value);
+  TIMER_A0->CCR[0] += delay;
+
+}
+
 void Drive_DAC(unsigned int level){
   unsigned int DAC_Word = 0;
-  int i;
-
-  DAC_Word = (0x1000) | (level & 0x0FFF);   // 0x1000 sets DAC for Write
+ int i;
+  DAC_Word = (0x1000) | (2*level/5 & 0x0FFF);   // 0x1000 sets DAC for Write
                                             // to DAC, Gain = 2, /SHDN = 1
                                             // and put 12-bit level value
                                             // in low 12 bits.
@@ -68,7 +130,7 @@ void Drive_DAC(unsigned int level){
 
   while (!(EUSCI_B0->IFG & EUSCI_B_IFG_TXIFG));      // Poll the TX flag to wait for completion
 
-  for(i = 200; i > 0; i--);                          // Delay 200 16 MHz SMCLK periods
+  for(i = 200; i > 0; i--);                                     // Delay 200 16 MHz SMCLK periods
                                                      //to ensure TX is complete by SIMO
 
   P4->OUT |= BIT1;                                   // Set P4.1   (drive /CS high on DAC)

@@ -10,8 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef unsigned int uint;
+#include <stdint.h>
 
 #define FREQ_1_5_MHz CS_CTL0_DCORSEL_0
 #define FREQ_3_MHz CS_CTL0_DCORSEL_1
@@ -22,7 +21,7 @@ typedef unsigned int uint;
 
 float GLOBAL_FREQ = 3.0f;
 
-void set_DC0(uint freq){
+void set_DC0(uint32_t freq){
 
     switch(freq){
     case FREQ_1_5_MHz:
@@ -56,7 +55,7 @@ void set_DC0(uint freq){
 }
 
 /* delay milliseconds when system clock is at 3 MHz for Rev C MCU */
-void delay_ms(uint delay) {
+void delay_ms(uint16_t delay) {
     int i, j;
     for (j = 0; j < delay; j++)
         for (i = 100*(int)GLOBAL_FREQ; i > 0; i--);      /* Delay 1 ms*/
