@@ -13,12 +13,11 @@
 #define KEYCODE "1234"
 
 /* this function initializes Port 5 and Port 2 that is connected to the keypad.
- * All pins are configured as GPIO input pin. The column pins have
- * the pull-up resistors enabled.
+ * The column pins have the pull-up resistors enabled.
  */
 void keypad_init(void) {
-    P5->DIR = 0;        /*Enable Input direction for all pins*/
     P2->DIR = 0;
+    P5->DIR = 0;        /*Enable Input direction for all pins*/
     P5->REN = 0x07;     /* enable pull resistor for column pins */
     P5->OUT = 0x07;     /* make column pins pull-ups */
 }
@@ -34,15 +33,6 @@ void keypad_init(void) {
  * First all rows are driven low and the input pins are read. If no key is pressed,
  * they will read as all one because of the pull up resistors. If they are not
  * all one, some key is pressed.
- * If some key is pressed, the program proceeds to drive one row low at a time and
- * leave the rest of the rows inactive (float) then read the input pins.
- * Knowing which row is active and which column is active, the program
- * can decide which key is pressed.
- *
- * Only one row is driven so that if multiple keys are pressed and row pins are shorted,
- * the microcontroller will not be damaged. When the row is being deactivated,
- * it is driven high first otherwise the stray capacitance may keep the inactive
- * row low for some time.)
  */
 char keypad_getkey(void) {
     int row, col;

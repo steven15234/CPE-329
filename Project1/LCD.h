@@ -10,13 +10,13 @@
 
 #include "delay.h"
 #include <string.h>
+
 /*Assumed that LCD is correctly connected to P4 on the board
 * with D4-D7 connected to P4.4-P4.7
 */
 #define LCD_RS 1     /* P4.0 mask */
 #define LCD_RW 2     /* P4.1 mask */
 #define LCD_EN 4     /* P4.2 mask */
-
 
 
 /* With 4-bit mode, each command or data is sent twice with upper
@@ -47,6 +47,7 @@ void LCD_home(uint line){
     LCD_nibble_write(home << 4, 0);      /* lower nibble */
 }
 
+/* Writes indiviual char to screen */
 void LCD_write_char(unsigned char data) {
     LCD_nibble_write(data & 0xF0, LCD_RS);    /* upper nibble first */
     LCD_nibble_write(data << 4, LCD_RS);      /* then lower nibble  */
@@ -54,6 +55,7 @@ void LCD_write_char(unsigned char data) {
     delay_ms(1);
 }
 
+/* Writes string to screen */
 void LCD_write(const char * string){
     int len = strlen(string);
     int i;
@@ -61,6 +63,7 @@ void LCD_write(const char * string){
     for(i = 0; i < len; i++)
         LCD_write_char(string[i]);
 }
+
 void LCD_command(unsigned char command) {
     LCD_nibble_write(command & 0xF0, 0);    /* upper nibble first */
     LCD_nibble_write(command << 4, 0);      /* then lower nibble */
@@ -70,7 +73,6 @@ void LCD_command(unsigned char command) {
     else
         delay_us(40);         /* all others 40 us */
 }
-
 
 void LCD_init(void) {
     P4->DIR = 0xFF;     /* make P4 pins output for data and controls */
@@ -89,12 +91,4 @@ void LCD_init(void) {
     LCD_command(0x01);      /* clear screen, move cursor to home */
     LCD_command(0x0F);      /* turn on display, cursor blinking */
 }
-
-
-
-
-
-
-
-
 #endif /* LCD_H_ */
