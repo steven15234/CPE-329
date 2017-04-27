@@ -13,7 +13,9 @@ void Drive_DAC(unsigned int level);
 volatile unsigned int TempDAC_Value = 0;
 volatile unsigned int delay = 0;
 
-#define TRI_SEGS 64
+#define TRI_STEPS 64
+int DAC_COUNT = 0;
+int DAC_SHIFT = 32;
 
 int main(void) {
 
@@ -69,7 +71,8 @@ int main(void) {
 
 
 
-/* Square Timer A0 interrupt service routine
+//Square Timer A0 interrupt service routine
+
 void TA0_0_IRQHandler(void) {
  static uint8_t DAC_STATE = 0;
  static uint8_t Delay_Loop = 0;
@@ -91,24 +94,20 @@ void TA0_0_IRQHandler(void) {
   }
   Drive_DAC(TempDAC_Value);
   TIMER_A0->CCR[0] += delay;
-
 }
-*/
-// Triangle Timer A0 interrupt service routine
+
+//Triangle Timer A0 interrupt service routine
 void TA0_0_IRQHandler(void) {
- static int8_t DAC_STATE = 0;
- static uint8_t Delay_Loop = 0;
+    TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;
 
- TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;
-
-  if(TempDac > 2048)
-      shift = -32;
-  else if (TempDAC_Value )
-      shift = 32;
-  TempDAC_Value += shift;
-  Drive_DAC(TempDAC_Value);
-  TIMER_A0->CCR[0] += delay;
-
+    if (DAC_COUNT >= TRI_STEPS) {
+        DAC_SHIFT *= -1; //invert shift once count hits 2V limit
+        DAC_COUNT = 0;
+    }
+    Drive_DAC(TempDAC_Value);
+    TempDAC_Value += DAC_SHIFT; //change voltage
+    TIMER_A0->CCR[0] += 0x0F00; //reset timer
+    DAC_COUNT++;
 }
 
 void Drive_DAC(unsigned int level){
