@@ -25,7 +25,7 @@ int main(void) {
   set_DC0(FREQ_24_MHz);
 
   // Configure port bits for SPI
-  P4->DIR |= BIT1;                     // Will use BIT4 to activate /CE on the DAC
+  P3->DIR |= BIT2;                     // Will use BIT4 to activate /CE on the DAC
   P1SEL0 |= BIT6 + BIT5;               // Configure P1.6 and P1.5 for UCB0SIMO and UCB0CLK
   P1SEL1 &= ~(BIT6 + BIT5);            //
 
@@ -78,7 +78,7 @@ void TA0_0_IRQHandler(void) {
  static uint8_t Delay_Loop = 0;
 
  TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;
-  if(Delay_Loop < 4){
+  if(Delay_Loop < 6){
       TIMER_A0->CCR[0] += delay;
       Delay_Loop++;
   }
@@ -97,18 +97,19 @@ void TA0_0_IRQHandler(void) {
 }
 
 //Triangle Timer A0 interrupt service routine
-void TA0_0_IRQHandler(void) {
-    TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;
 
-    if (DAC_COUNT >= TRI_STEPS) {
-        DAC_SHIFT *= -1; //invert shift once count hits 2V limit
-        DAC_COUNT = 0;
-    }
-    Drive_DAC(TempDAC_Value);
-    TempDAC_Value += DAC_SHIFT; //change voltage
-    TIMER_A0->CCR[0] += 0x0F00; //reset timer
-    DAC_COUNT++;
-}
+//void TA0_0_IRQHandler(void) {
+//    TIMER_A0->CCTL[0] &= ~TIMER_A_CCTLN_CCIFG;
+//
+//    if (DAC_COUNT >= TRI_STEPS) {
+//        DAC_SHIFT *= -1; //invert shift once count hits 2V limit
+//        DAC_COUNT = 0;
+//    }
+//    Drive_DAC(TempDAC_Value);
+//    TempDAC_Value += DAC_SHIFT; //change voltage
+//    TIMER_A0->CCR[0] += 0x0F00; //reset timer
+//    DAC_COUNT++;
+//}
 
 void Drive_DAC(unsigned int level){
   unsigned int DAC_Word = 0;
@@ -118,7 +119,7 @@ void Drive_DAC(unsigned int level){
                                             // and put 12-bit level value
                                             // in low 12 bits.
 
-  P4->OUT &= ~BIT1;                                   // Clear P4.1 (drive /CS low on DAC)
+  P3->OUT &= ~BIT2;                                   // Clear P4.1 (drive /CS low on DAC)
                                                       // Using a port output to do this for now
 
   EUSCI_B0->TXBUF = (unsigned char) (DAC_Word >> 8);  // Shift upper byte of DAC_Word
@@ -132,7 +133,7 @@ void Drive_DAC(unsigned int level){
   for(i = 200; i > 0; i--);                                     // Delay 200 16 MHz SMCLK periods
                                                      //to ensure TX is complete by SIMO
 
-  P4->OUT |= BIT1;                                   // Set P4.1   (drive /CS high on DAC)
+  P3->OUT |= BIT2;                                   // Set P4.1   (drive /CS high on DAC)
 
   return;
 }

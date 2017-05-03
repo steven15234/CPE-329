@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "msp.h"
 
 #define FREQ_1_5_MHz CS_CTL0_DCORSEL_0
 #define FREQ_3_MHz CS_CTL0_DCORSEL_1
