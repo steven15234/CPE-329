@@ -61,11 +61,6 @@ int main(int argc, char const *argv[])
 
    set_DC0(FREQ_12_MHz);
 
-   // Configure port bits for SPI
-   P3->DIR |= BIT2;                     // Will use BIT4 to activate /CE on the DAC
-   P1SEL0 |= BIT6 + BIT5;               // Configure P1.6 and P1.5 for UCB0SIMO and UCB0CLK
-   P1SEL1 &= ~(BIT6 + BIT5);            //
-
    //Configure SMCLK to output P4.3
    P4->DIR |= BIT3;
    P4->SEL0 |= BIT3;
@@ -73,6 +68,12 @@ int main(int argc, char const *argv[])
    //generate default 100 Hz square wave with 50% duty cycle
    calcAdvTimer(&SQRLimit, &SQRBase, freq, duty_cycle);
    setWaveDelays(freq/100 - 1);
+
+
+   // Configure port bits for SPI
+   P3->DIR |= BIT2;                     // Will use BIT4 to activate /CE on the DAC
+   P1SEL0 |= BIT6 + BIT5;               // Configure P1.6 and P1.5 for UCB0SIMO and UCB0CLK
+   P1SEL1 &= ~(BIT6 + BIT5);
 
    // SPI Setup
    EUSCI_B0->CTLW0 |= EUSCI_B_CTLW0_SWRST;   // Put eUSCI state machine in reset
