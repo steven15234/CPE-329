@@ -16,17 +16,11 @@
 #define MAX_VALUE 4096
 
 int pow10(int n);
-
+uint32_t a_to_i(char* str, uint8_t len);
 int main(void) {
 
    //initalize the UART with a read buffer of size 5
-   UART0_init(SIZE);
-
-
-   /* initialize P2.2-P2.0 for tri-color LEDs */
-   P2->SEL1 &= ~7;         /* configure P2.2-P2.0 as simple I/O */
-   P2->SEL0 &= ~7;
-   P2->DIR |= 7;           /* P2.2-2.0 set as output */
+   UART0_init(SIZE, BAUD_19200);
 
    DAC_init();
 
@@ -41,15 +35,12 @@ int main(void) {
    while (1) {
 
        if(UART_get_flag()){
-           int i, j;
+
            unsigned value = 0;
            buf = UART_get_buffer();
-           j = SIZE - 2;
-           for(i = 0; i < SIZE - 1; i++){
-               value +=  (buf[i] - '0') * pow10(j--);
-           }
+           value = a_to_i(buf, SIZE);
            value = (value > MAX_VALUE)? MAX_VALUE: value;
-           //DAC_drive(value);
+           DAC_drive(value);
            //P2->OUT = value;
            UART_reset_flag();
            UART_send(buf, TRUE);
@@ -58,17 +49,15 @@ int main(void) {
    }
 }
 
-
-
-int pow10(int n){
-
-    static int LUT_pow10[10] = {
-        1, 10, 100, 1000, 10000,
-        100000, 1000000, 10000000, 100000000, 1000000000
-    };
-
-    return LUT_pow10[n];
+void i_to_a(char* str, uint8_t len, uint32_t val){
+    int i;
+    for(i=1; i<=len; i++){
+        str[len-i] = (char) ((val % 10UL) + '0');
+        val/=10;
+      }
+      str[i-1] = '\0';
 }
+
 
 
 

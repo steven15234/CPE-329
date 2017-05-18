@@ -137,13 +137,11 @@ int main(int argc, char const *argv[])
             break;
          case '8':
             TempDAC_Value = 0;
-            wave_name = "SINE";
             wave_type = SINE;
             break;
          case '9':
             TempDAC_Value = 0;
             DAC_COUNT = 0;
-            wave_name = "SAW";
             wave_type = SAW;
          case '*':
             if(wave_type == SQR && duty_cycle - 0.1f > 0.1f)

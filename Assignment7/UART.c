@@ -7,16 +7,42 @@
 
 #include "UART.h"
 #include "msp.h"
+#include "delay.h"
 
-char* UART_BUFFER = NULL;
-int UART_BUFFER_FLAG;
-int UART_BUFFER_SIZE;
+static char* UART_BUFFER = NULL;
+static int UART_BUFFER_FLAG;
+static int UART_BUFFER_SIZE;
 
-void UART0_init(uint32_t buffer_size){
+
+//fast string to unsigned number
+uint32_t a_to_i(char* str, uint8_t len){
+    int i, j, result;
+    j = len - 2;
+    for(i = result = 0; i < len - 1; i++){
+       result +=  (str[i] - '0') * pow10(j--);
+    }
+    return result;
+}
+
+//Fast 10^n lookup
+int pow10(int n){
+
+    static int LUT_pow10[10] = {
+        1, 10, 100, 1000, 10000,
+        100000, 1000000, 10000000, 100000000, 1000000000
+    };
+
+    return LUT_pow10[n];
+}
+
+
+
+
+void UART0_init(uint32_t buffer_size, uint32_t baud_rate){
     EUSCI_A0->CTLW0 |= 1;     /* put in reset mode for config */
     EUSCI_A0->MCTLW = 0;      /* disable oversampling */
     EUSCI_A0->CTLW0 = 0x0081; /* 1 stop bit, no parity, SMCLK, 8-bit data */
-    EUSCI_A0->BRW = 26;       /* 3000000 / 115200 = 26 */
+    EUSCI_A0->BRW = (uint32_t) 3000000/baud_rate;       /* SMCLK/Baud_rate*/
     P1->SEL0 |= 0x0C;         /* P1.3, P1.2 for UART */
     P1->SEL1 &= ~0x0C;
     EUSCI_A0->CTLW0 &= ~1;    /* take UART out of reset mode */
@@ -56,6 +82,7 @@ void EUSCIA0_IRQHandler(void) {
         UART_BUFFER[i-1] = '0';
     }
 
+    //if buffer is full, raise the flag
     if(UART_BUFFER_SIZE - 1 == i){
        i = 0;
        UART_BUFFER_FLAG = 1;
@@ -66,6 +93,7 @@ void EUSCIA0_IRQHandler(void) {
 }
 
 
+//Send string to Console
 void UART_send(char* string, int newline){
     int i;
     for(i = 0; i < strlen(string); i++){
