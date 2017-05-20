@@ -24,6 +24,8 @@ int main(void) {
    DAC_init();
 
 
+   P5->SEL1 |= BIT4;                       // Configure P5.4 for ADC A1
+   P5->SEL0 |= BIT4;
 
    // Enable global interrupt
    __enable_irq();
@@ -31,6 +33,11 @@ int main(void) {
    NVIC_EnableIRQ(EUSCIA0_IRQn);      /* enable UART interrupt in NVIC */
 
    NVIC->ISER[0] = 1 << ((ADC14_IRQn) & 31); /*enable ADC14 interrupt*/
+
+
+   // Sampling time, S&H=16, ADC14 on
+   ADC14->CTL0 = ADC14_CTL0_SHT0_2 | ADC14_CTL0_SHP | ADC14_CTL0_ON;
+   ADC14->CTL1 = ADC14_CTL1_RES__14BIT;         // Use sampling timer, 12-bit conversion results
 
 
 

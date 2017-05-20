@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 
-void ADC14_limits_init();
+void ADC14_init(void);
 
 void ADC14_start_sample();
 uint16_t ADC14_get_flag();

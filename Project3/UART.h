@@ -31,6 +31,7 @@ int UART_get_flag();
 void UART_reset_flag();
 
 void UART_send(char* string, int newline);
+void UART_send_VT100(char* command);
 
 void UART_send_char(char val);
 
