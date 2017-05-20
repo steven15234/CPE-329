@@ -42,7 +42,7 @@ void UART0_init(uint32_t buffer_size, uint32_t baud_rate){
     EUSCI_A0->CTLW0 |= 1;     /* put in reset mode for config */
     EUSCI_A0->MCTLW = 0;      /* disable oversampling */
     EUSCI_A0->CTLW0 = UCSSEL__SMCLK | UCSWRST; /* 1 stop bit, no parity, SMCLK, 8-bit data */
-    EUSCI_A0->BRW = (uint32_t) 3 * 1000000/baud_rate;       /* SMCLK/Baud_rate*/
+    EUSCI_A0->BRW = SMCLK_FREQ /baud_rate;       /* SMCLK/Baud_rate*/
     P1->SEL0 |= 0x0C;         /* P1.3, P1.2 for UART */
     P1->SEL1 &= ~0x0C;
     EUSCI_A0->CTLW0 &= ~1;    /* take UART out of reset mode */
@@ -107,6 +107,19 @@ void UART_send(char* string, int newline){
         EUSCI_A0->TXBUF = '\r';              /* send a return char */
     }
 }
+
+//Send VT100 code to Console
+void UART_send_VT100(char* command){
+    int i;
+    while(!(EUSCI_A0->IFG & 0x02));  /* wait for transmit buffer empty */
+           EUSCI_A0->TXBUF = 27;              /* send escape char */            /* send bracket char */
+    for(i = 0; i < strlen(command); i++){
+        while(!(EUSCI_A0->IFG & 0x02));  /* wait for transmit buffer empty */
+           EUSCI_A0->TXBUF = command[i];              /* send a char */
+    }
+}
+
+
 void UART_send_char(char val){
     while(!(EUSCI_A0->IFG & 0x02)) { }  /* wait for transmit buffer empty */
             EUSCI_A0->TXBUF = val;              /* send a char */
