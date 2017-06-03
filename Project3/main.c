@@ -61,8 +61,8 @@ int main(void) {
    P1->SEL0 &= ~BIT0;
    P1->DIR |= BIT0;           /* P2.0 set as output pin */
 
-   P2->SEL1 &= ~BIT0 | BIT1 | BIT2;         /* configure P2.0 as simple I/O */
-   P2->SEL0 &= ~BIT0 | BIT1 | BIT2;
+   P2->SEL1 &= ~BIT0 | ~BIT1 | ~BIT2;         /* configure P2.0 as simple I/O */
+   P2->SEL0 &= ~BIT0 | ~BIT1 | ~BIT2;
    P2->DIR |= BIT0 | BIT1 | BIT2;           /* P2.0 set as output pin */
 
    P5->SEL1 |= BIT4;                       // Configure P5.4 for ADC A1
