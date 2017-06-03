@@ -14,8 +14,9 @@
 
 
 int main(void) {
-    uint freq = 24;
-    setDC0(FREQ_24_MHz);
+
+    set_HS_CLKS();
+
     WDTCTL = WDTPW | WDTHOLD;           // Stop watchdog timer
 
     P2->SEL1 &= ~1;         /* configure P2.0 as simple I/O */
@@ -30,11 +31,11 @@ int main(void) {
 
         P2->OUT |= 1;       /* turn on P2.0 red LED */
         P2->OUT |= 4;       /* turn on P2.2 blue LED */
-        delay_us(50, freq);
+        delay_ms(100);
 
         P2->OUT &= ~1;      /* turn off P2.0 red LED */
         P2->OUT &= ~4;      /* turn off P2.2 blue LED */
-        delay_us(50, freq);
+        delay_ms(100);
 
     }
 }
